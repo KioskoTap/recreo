@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="robots" content="noindex">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Recreo · Saldo del kiosco</title>
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<style>
+  :root{--verde:#0F766E;--verde-osc:#0B5A54;--verde-claro:#E6F4F2;--sol:#F5B700;--sol-claro:#FFF6D6;
+    --rojo:#C62828;--rojo-claro:#FDECEC;--texto:#1F2933;--gris:#6B7785;--borde:#E3E8EE;--fondo:#F6F8FA;--radio:16px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px}
+  button,input{font:inherit}
+  .oculto{display:none!important}
+  header{background:var(--verde);color:#fff;padding:14px 18px 54px}
+  header .fila{display:flex;align-items:center;max-width:620px;margin:0 auto}
+  header .marca{font-weight:900;font-size:22px} header .marca span{color:var(--sol)}
+  header .kio{margin-left:auto;font-size:13px;opacity:.9;text-align:right}
+  main{max-width:620px;margin:-40px auto 0;padding:0 14px 40px}
+  .tarjeta{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  h2 .ico{width:22px;height:22px;color:var(--verde)}
+  .hijo{display:flex;align-items:center;gap:14px}
+  .avatar{width:52px;height:52px;border-radius:50%;background:var(--verde);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+  .hijo .nom{font-size:19px;font-weight:800} .hijo .cur{color:var(--gris);font-size:14px}
+  .saldo{text-align:center;padding:16px 0 4px}
+  .saldo small{color:var(--gris);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:12px}
+  .saldo b{display:block;font-size:44px;font-weight:900;margin-top:4px;letter-spacing:.3px}
+  .alerta{border-radius:12px;padding:12px 14px;font-size:14px;margin-top:12px}
+  .alerta.baja{background:var(--sol-claro);color:#7A5B00}
+  .alerta.ok{background:var(--verde-claro);color:var(--verde-osc)}
+  .alerta.error{background:var(--rojo-claro);color:var(--rojo)}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dato{background:var(--fondo);border-radius:12px;padding:12px}
+  .dato small{display:block;color:var(--gris);font-size:12px;font-weight:600}
+  .dato b{font-size:21px}
+  .barra{height:10px;border-radius:999px;background:var(--borde);overflow:hidden;margin-top:12px}
+  .barra i{display:block;height:100%;background:var(--verde);border-radius:999px}
+  .barra.llena i{background:var(--rojo)}
+  .sug{margin-top:12px;background:var(--verde-claro);border-radius:12px;padding:14px;color:var(--verde-osc)}
+  .sug b{font-size:20px}
+  .alias{display:flex;align-items:center;gap:10px;background:var(--fondo);border:1px dashed #9CC9C4;border-radius:12px;padding:12px 14px;margin:8px 0 14px}
+  .alias b{font-size:18px;word-break:break-all}
+  .btn{border:0;border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;color:#fff;background:var(--verde);cursor:pointer}
+  .btn:disabled{background:#A7B4BF}
+  .btn.sec{background:#fff;color:var(--verde);border:1.5px solid var(--verde)}
+  .btn.chico{padding:9px 12px;font-size:14px}
+  .btn.ancho{width:100%}
+  .link{background:none;border:0;color:var(--verde);font-weight:700;cursor:pointer;padding:0;font-size:14px}
+  .fila{display:flex;gap:8px;align-items:center}
+  .fila>input{flex:1}
+  input{width:100%;padding:13px 12px;border:1px solid var(--borde);border-radius:12px;font-size:16px;background:#fff}
+  input:focus{outline:2px solid #9CC9C4;border-color:var(--verde)}
+  label{display:block;font-size:13px;color:var(--gris);font-weight:600;margin:4px 0 6px}
+  .pasos{margin:0;padding-left:20px;color:var(--texto);font-size:14px;line-height:1.6}
+  .mov{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--borde);font-size:15px}
+  .mov:last-child{border:0}
+  .mov .det{color:var(--gris);font-size:12px;margin-top:2px}
+  .mov .imp{margin-left:auto;font-weight:800;white-space:nowrap}
+  .mov .imp.mas{color:#1B7F3B}
+  .mov.anulado .imp{text-decoration:line-through;color:var(--gris)}
+  .dia{font-size:12px;color:var(--gris);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px}
+  .dia:first-child{margin-top:0}
+  details{font-size:14px;line-height:1.55}
+  details summary{cursor:pointer;font-weight:700;color:var(--verde);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details p{margin:10px 0 0;color:var(--texto)}
+  .pie{text-align:center;color:var(--gris);font-size:13px;margin-top:22px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1F2933;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:90%;text-align:center}
+  .vacio{color:var(--gris);font-size:14px}
+  .pend{font-size:13px;color:#7A5B00;background:var(--sol-claro);border-radius:10px;padding:8px 10px;margin-top:10px}
+  @media (min-width:700px){ main{margin-top:-44px} .saldo b{font-size:52px} }
+</style>
+</head>
+<body>
+<header><div class="fila"><div class="marca">Recre<span>o</span></div><div class="kio" id="hKio"></div></div></header>
+<main>
+  <div id="cargando" class="tarjeta" style="text-align:center;color:var(--gris)">Cargando…</div>
+  <div id="invalido" class="tarjeta oculto">
+    <h2>Este link no está activo</h2>
+    <p style="color:var(--gris);margin:0">Puede que se haya generado un link nuevo. Pedile al kiosco del colegio el link actualizado de tu hijo/a.</p>
+  </div>
+
+  <div id="app" class="oculto">
+    <!-- Saldo -->
+    <section class="tarjeta">
+      <div class="hijo"><div class="avatar" id="av"></div><div><div class="nom" id="nom"></div><div class="cur" id="cur"></div></div></div>
+      <div class="saldo"><small>Saldo disponible</small><b id="saldo"></b></div>
+      <div id="alertaSaldo"></div>
+    </section>
+
+    <!-- Hoy y tope -->
+    <section class="tarjeta">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hoy</h2>
+      <div class="dos">
+        <div class="dato"><small>Gastó hoy</small><b id="hoy"></b></div>
+        <div class="dato"><small>Tope diario</small><b id="tope"></b></div>
+      </div>
+      <div id="barraTope" class="barra oculto"><i></i></div>
+      <div style="margin-top:14px">
+        <label for="inTope">Límite de gasto por día (lo deciden solo ustedes)</label>
+        <div class="fila"><input id="inTope" inputmode="numeric" placeholder="Ej.: 3000"><button class="btn chico" id="btTope">Guardar</button></div>
+        <button class="link" id="btSinTope" style="margin-top:10px">Quitar el tope</button>
+      </div>
+    </section>
+
+    <!-- Cuánto necesita -->
+    <section class="tarjeta">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>¿Cuánto necesita?</h2>
+      <div id="calc"></div>
+    </section>
+
+    <!-- Cargar saldo -->
+    <section class="tarjeta">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Cargar saldo</h2>
+      <div id="sinAlias" class="vacio oculto">Consultá en el kiosco del colegio cómo hacer la transferencia.</div>
+      <div id="conAlias">
+        <ol class="pasos"><li>Transferí desde tu banco o billetera al alias del kiosco.</li><li>Avisá acá cuánto transferiste.</li><li>El kiosco lo carga en el saldo de tu hijo/a.</li></ol>
+        <div class="alias"><div><small style="color:var(--gris);font-size:12px;font-weight:600">ALIAS DEL KIOSCO</small><br><b id="alias"></b></div><button class="btn chico sec" id="btCopiar" style="margin-left:auto">Copiar</button></div>
+      </div>
+      <label for="inMonto">¿Cuánto transferiste?</label>
+      <div class="fila"><input id="inMonto" inputmode="numeric" placeholder="Ej.: 10000"><button class="btn chico" id="btAvisar">Avisar</button></div>
+      <div id="pendientes"></div>
+    </section>
+
+    <!-- Movimientos -->
+    <section class="tarjeta">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Qué compró y cuándo</h2>
+      <div id="movs"></div>
+    </section>
+
+    <!-- Qué es -->
+    <section class="tarjeta">
+      <details>
+        <summary>¿Qué es Recreo y cómo funciona?</summary>
+        <p>Recreo es el sistema del kiosco del colegio para que los chicos compren <b>sin efectivo y sin usar el celular</b>. Cada alumno tiene un llavero personal: lo apoya en el kiosco y se descuenta lo que compra de su saldo.</p>
+        <p><b>Nunca puede gastar más de lo que tiene cargado</b>, y si ustedes ponen un tope diario, tampoco puede pasarse de ese tope en el día.</p>
+        <p>La plata se transfiere directamente al kiosco. Desde esta página pueden ver el saldo, qué compró y cuándo, y cuánto conviene cargarle.</p>
+        <p>Si el llavero se pierde, avisen en el kiosco: lo bloquean al instante y el saldo pasa al llavero nuevo, sin perder nada.</p>
+      </details>
+    </section>
+
+    <!-- Seguridad del link -->
+    <section class="tarjeta">
+      <details>
+        <summary>Seguridad de este link</summary>
+        <p>Este link es personal: quien lo tenga puede ver el saldo y los consumos de tu hijo/a. Guardalo y no lo compartas con otras personas.</p>
+        <p>Si lo compartiste de más, generá uno nuevo: el anterior deja de funcionar al instante.</p>
+        <button class="btn sec chico" id="btNuevo" style="margin-top:10px">Generar un link nuevo</button>
+      </details>
+    </section>
+
+    <div class="pie">Recreo · El kiosco sin efectivo</div>
+  </div>
+</main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient('https://xropgbjtjugjxjuawwfo.supabase.co', 'sb_publishable_PvaK4Evh8txEz-EQoUolsQ_pd_AKyj8',
+  { auth: { persistSession:false, autoRefreshToken:false } });
+const $ = id => document.getElementById(id);
+const pesos = n => '$ ' + Math.round(Number(n)||0).toLocaleString('es-AR');
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soloNum = s => Number(String(s||'').replace(/[^0-9]/g,'')) || 0;
+const toast = (t,ms=2600) => { const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),ms); };
+const err = e => /fetch|network/i.test(e?.message||'') ? 'Sin conexión. Probá de nuevo.' : (e?.message || 'Error inesperado');
+
+let token = new URLSearchParams(location.search).get('t') || '';
+let datos = null;
+
+function invalido(){ $('cargando').classList.add('oculto'); $('app').classList.add('oculto'); $('invalido').classList.remove('oculto'); }
+
+async function cargar(){
+  if(token.length < 30) return invalido();
+  const { data, error } = await sb.rpc('portal_datos', { p_token: token });
+  if(error){ $('cargando').textContent = err(error); return; }
+  if(!data) return invalido();
+  datos = data; pintar();
+  $('cargando').classList.add('oculto'); $('app').classList.remove('oculto');
+}
+
+function pintar(){
+  const d = datos;
+  $('hKio').innerHTML = esc(d.kiosco||'') + (d.colegio ? '<br>'+esc(d.colegio) : '');
+  $('av').textContent = (d.nombre||'?').trim().split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+  $('nom').textContent = d.nombre; $('cur').textContent = d.curso || '';
+  $('saldo').textContent = pesos(d.saldo);
+
+  const promDia = d.dias_con_compras_30d ? d.gasto_30d / d.dias_con_compras_30d : 0;
+  const saldo = Number(d.saldo);
+  let alerta = '';
+  if(!d.tiene_llavero) alerta = '<div class="alerta error">No tiene un llavero activo. Si lo perdió, pedí uno nuevo en el kiosco: el saldo no se pierde.</div>';
+  else if(saldo <= 0) alerta = '<div class="alerta error">Se quedó sin saldo. Cargale para que pueda comprar.</div>';
+  else if(promDia && saldo < promDia*2) alerta = `<div class="alerta baja">Saldo bajo: le alcanza para aprox. ${Math.max(1,Math.floor(saldo/promDia))} día(s) más.</div>`;
+  $('alertaSaldo').innerHTML = alerta;
+
+  const hoy = Number(d.gastado_hoy), tope = d.tope_diario==null ? null : Number(d.tope_diario);
+  $('hoy').textContent = pesos(hoy);
+  $('tope').textContent = tope==null ? 'Sin tope' : pesos(tope);
+  $('inTope').value = tope==null ? '' : Math.round(tope);
+  $('btSinTope').classList.toggle('oculto', tope==null);
+  const b = $('barraTope');
+  if(tope){ b.classList.remove('oculto'); const pct=Math.min(100, hoy/tope*100); b.firstChild.style.width=pct+'%'; b.classList.toggle('llena', pct>=100); }
+  else b.classList.add('oculto');
+
+  $('calc').innerHTML = promDia ? `
+    <div class="dos">
+      <div class="dato"><small>Gasta por día (promedio)</small><b>${pesos(promDia)}</b></div>
+      <div class="dato"><small>Últimos 30 días</small><b>${pesos(d.gasto_30d)}</b></div>
+    </div>
+    <div class="sug">Para una semana de colegio (5 días) conviene cargarle aprox.<br><b>${pesos(Math.ceil(promDia*5/500)*500)}</b></div>
+    <div class="vacio" style="margin-top:10px">Calculado con los días en que compró algo en los últimos 30 días.</div>`
+    : '<div class="vacio">Todavía no hay compras suficientes para calcularlo. Apenas empiece a usar el llavero, acá vas a ver cuánto gasta por día y cuánto conviene cargarle.</div>';
+
+  if(d.alias_pago){ $('alias').textContent = d.alias_pago; $('conAlias').classList.remove('oculto'); $('sinAlias').classList.add('oculto'); }
+  else { $('conAlias').classList.add('oculto'); $('sinAlias').classList.remove('oculto'); }
+  $('pendientes').innerHTML = (d.avisos_pendientes||[]).map(a =>
+    `<div class="pend">⏳ Avisaste ${pesos(a.monto)} el ${new Date(a.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}. Esperando que el kiosco lo cargue.</div>`).join('');
+
+  const movs = d.movimientos || [];
+  const anulados = new Set(movs.filter(m=>m.anula_movimiento_id).map(m=>m.anula_movimiento_id));
+  const NOM = {compra:'Compra en el kiosco', carga:'Carga de saldo', anulacion:'Corrección del kiosco', ajuste:'Ajuste'};
+  let html='', diaAnt='';
+  movs.forEach(m=>{
+    const f = new Date(m.creado_en);
+    const dia = f.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+    if(dia!==diaAnt){ html += `<div class="dia">${esc(dia)}</div>`; diaAnt=dia; }
+    const an = anulados.has(m.id);
+    html += `<div class="mov ${an?'anulado':''}"><div><div>${NOM[m.tipo]||m.tipo}${an?' (anulada)':''}</div>
+      <div class="det">${f.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false})} hs${m.detalle?' · '+esc(m.detalle):''}</div></div>
+      <div class="imp ${m.monto>0?'mas':''}">${m.monto>0?'+':'−'} ${pesos(Math.abs(m.monto))}</div></div>`;
+  });
+  $('movs').innerHTML = html || '<div class="vacio">Todavía no hay movimientos.</div>';
+}
+
+$('btTope').onclick = async () => {
+  const v = soloNum($('inTope').value); if(!v) return toast('Escribí un monto para el tope.');
+  const { error } = await sb.rpc('portal_tope', { p_token: token, p_tope: v });
+  if(error) return toast(err(error)); toast(`Listo: no va a poder gastar más de ${pesos(v)} por día.`); cargar();
+};
+$('btSinTope').onclick = async () => {
+  if(!confirm('¿Quitar el tope diario?')) return;
+  const { error } = await sb.rpc('portal_tope', { p_token: token, p_tope: null });
+  if(error) return toast(err(error)); toast('Tope quitado.'); cargar();
+};
+$('btCopiar').onclick = async () => {
+  try{ await navigator.clipboard.writeText(datos.alias_pago); toast('Alias copiado.'); }
+  catch{ prompt('Copiá el alias:', datos.alias_pago); }
+};
+$('btAvisar').onclick = async () => {
+  const v = soloNum($('inMonto').value); if(!v) return toast('Escribí cuánto transferiste.');
+  $('btAvisar').disabled = true;
+  const { error } = await sb.rpc('portal_avisar', { p_token: token, p_monto: v });
+  $('btAvisar').disabled = false;
+  if(error) return toast(err(error)); $('inMonto').value=''; toast('¡Aviso enviado! El kiosco lo va a cargar.'); cargar();
+};
+$('btNuevo').onclick = async () => {
+  if(!confirm('Se va a generar un link nuevo y el actual deja de funcionar. Vas a tener que guardar el nuevo. ¿Continuar?')) return;
+  const { data, error } = await sb.rpc('portal_nuevo_link', { p_token: token });
+  if(error) return toast(err(error));
+  token = data; const url = location.origin + location.pathname + '?t=' + data;
+  history.replaceState(null,'',url);
+  try{ await navigator.clipboard.writeText(url); }catch{}
+  alert('Link nuevo generado y copiado. Guardalo (por ejemplo, en un chat con vos mismo). El anterior ya no funciona.');
+};
+cargar();
+</script>
+</body>
+</html>

@@ -148,6 +148,7 @@
 
     <!-- CARGAR -->
     <section id="pCargar" class="oculto">
+      <div id="cgAvisos"></div>
       <div id="cgLector" class="lector"></div>
       <div class="manual">¿No tiene el llavero? <a href="#" id="cgBuscar">Buscar por nombre</a></div>
       <div id="cgPaso2" class="oculto" style="margin-top:14px">
@@ -320,7 +321,7 @@ $('cbBtn').onclick = async ()=>{
   const n=Number(montoCobro||0); if(!alCobro||!n) return;
   $('cbBtn').disabled=true;
   const { data, error } = await sb.rpc('cobrar', { p_uid: alCobro.uid, p_monto: n });
-  if(error){ resultado(false, /insuficiente/i.test(error.message)?'Saldo insuficiente':'No se pudo cobrar', errorTexto(error)); $('cbBtn').disabled=false; return; }
+  if(error){ resultado(false, /insuficiente/i.test(error.message)?'Saldo insuficiente':(/tope diario/i.test(error.message)?'Supera el tope diario':'No se pudo cobrar'), errorTexto(error)); $('cbBtn').disabled=false; return; }
   resultado(true, `Cobrado ${pesos(n)}`, `${alCobro.nombre} · le quedan ${pesos(data[0].r_saldo)}`);
   cobroReset();
 };
@@ -328,7 +329,7 @@ $('cbOtro').onclick = cobroReset;
 
 // ===================== CARGAR =====================
 function cargaReset(){
-  alCarga=null; montoCarga=''; $('cgDetalle').value='';
+  alCarga=null; montoCarga=''; $('cgDetalle').value=''; pintarAvisos();
   $('cgPaso2').classList.add('oculto'); $('cgLector').classList.remove('oculto');
   pintarLector($('cgLector'), 'Apoyá el llavero para cargar', uidCarga);
 }
@@ -352,16 +353,36 @@ $('cgBtn').onclick = async ()=>{
   $('cgBtn').disabled=true;
   const { data, error } = await sb.rpc('cargar_saldo', { p_alumno: alCarga.id, p_monto: n, p_detalle: $('cgDetalle').value.trim()||null });
   if(error){ resultado(false,'No se pudo cargar', errorTexto(error)); $('cgBtn').disabled=false; return; }
+  if(alCarga.aviso) await sb.rpc('resolver_aviso', { p_aviso: alCarga.aviso, p_estado: 'cargado' });
   resultado(true, `Cargado ${pesos(n)}`, `${alCarga.nombre} · saldo ${pesos(data)}`);
   cargaReset();
 };
 $('cgOtro').onclick = cargaReset;
+async function pintarAvisos(){
+  const { data, error } = await sb.from('avisos_transferencia').select('id,monto,comentario,creado_en,alumno_id,alumnos(nombre,curso,saldo)').eq('estado','pendiente').order('creado_en');
+  const c = $('cgAvisos'); if(error || !data?.length){ c.innerHTML=''; return; }
+  c.innerHTML = `<div class="tarjeta"><h2>Avisos de padres (${data.length})</h2>` + data.map(a=>`
+    <div class="mov"><div><div><b>${esc(a.alumnos?.nombre||'')}</b> · ${esc(a.alumnos?.curso||'')}</div>
+      <div class="det">Avisó que transfirió ${pesos(a.monto)} · ${new Date(a.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}</div>
+      <a href="#" class="det" data-nollego="${a.id}" style="color:var(--rojo)">No llegó la transferencia</a></div>
+      <button class="btn chico" style="width:auto;margin-left:auto" data-cargar="${a.id}">Cargar</button></div>`).join('') + '</div>';
+  c.querySelectorAll('[data-cargar]').forEach(b=>b.onclick=()=>{
+    const a=data.find(x=>x.id==b.dataset.cargar);
+    mostrarCarga({ id:a.alumno_id, nombre:a.alumnos.nombre, curso:a.alumnos.curso, saldo:Number(a.alumnos.saldo), aviso:a.id });
+    setMontoCarga(String(Math.round(a.monto))); $('cgDetalle').value='Transferencia avisada por los padres';
+    c.innerHTML='';
+  });
+  c.querySelectorAll('[data-nollego]').forEach(l=>l.onclick=async e=>{ e.preventDefault();
+    if(!confirm('¿Marcar que esta transferencia no llegó? Los padres dejan de verla como pendiente.')) return;
+    const { error } = await sb.rpc('resolver_aviso', { p_aviso: Number(l.dataset.nollego), p_estado: 'no_recibido' });
+    if(error) return toast(errorTexto(error)); toast('Aviso marcado como no recibido.'); pintarAvisos(); });
+}
 $('cgBuscar').onclick = e => { e.preventDefault(); elegirAlumno(a => mostrarCarga(a)); };
 
 // ===================== ALUMNOS =====================
 let cacheAlumnos=[];
 async function cargarAlumnos(){
-  const { data, error } = await sb.from('alumnos').select('id,nombre,curso,saldo,activo,llaveros(uid,estado)').eq('activo',true).order('nombre');
+  const { data, error } = await sb.from('alumnos').select('id,nombre,curso,saldo,activo,token_padres,tope_diario,llaveros(uid,estado)').eq('activo',true).order('nombre');
   if(error){ toast(errorTexto(error)); return []; }
   cacheAlumnos = data; return data;
 }
@@ -432,8 +453,16 @@ async function fichaAlumno(id){
   const m = abrirHoja(a.nombre, `<div class="alumno" style="margin-bottom:10px">${htmlAlumno(a, a.saldo)}</div>
     <div id="fhLlav"></div>
     <div class="fila" style="margin:12px 0"><button class="btn sec chico" id="fhCambiar">Cambiar llavero</button><button class="btn peligro chico" id="fhBloq">Bloquear llavero</button></div>
+    <div class="tarjeta" style="background:var(--verde-claro);border-color:#BFE0DC">
+      <h2 style="margin-bottom:6px">Link para los padres</h2>
+      <div style="font-size:13px;color:var(--verde-osc);margin-bottom:10px">Con este link ven el saldo, qué compró y cuánto conviene cargarle. ${a.tope_diario?`Tope diario puesto por los padres: <b>${pesos(a.tope_diario)}</b>.`:'Sin tope diario.'}</div>
+      <div class="fila"><button class="btn chico" id="fhWa">Enviar por WhatsApp</button><button class="btn sec chico" id="fhCopiar">Copiar link</button></div>
+    </div>
     <h2 style="margin-top:6px">Últimos movimientos</h2><div id="fhMovs">Cargando…</div>`);
   const activo = (a.llaveros||[]).find(x=>x.estado==='activo');
+  const linkPadres = new URL('padres.html?t='+a.token_padres, location.href).href;
+  m.querySelector('#fhWa').onclick = ()=> window.open('https://wa.me/?text='+encodeURIComponent(`Hola! Este es el link para ver el saldo y los consumos de ${a.nombre} en el kiosco del colegio (Recreo). Es personal, no lo compartas: ${linkPadres}`), '_blank');
+  m.querySelector('#fhCopiar').onclick = async ()=>{ try{ await navigator.clipboard.writeText(linkPadres); toast('Link copiado.'); }catch{ prompt('Copiá el link:', linkPadres); } };
   m.querySelector('#fhLlav').innerHTML = activo
     ? `<span class="chip">Llavero activo · ${esc(activo.uid)}</span>`
     : `<span class="chip bloq">Sin llavero activo</span>`;
@@ -466,7 +495,7 @@ function htmlMovs(lista, conAnular, nombres){
   if(!lista.length) return '<div style="color:var(--gris);font-size:14px">Sin movimientos.</div>';
   const anulados = new Set(lista.filter(x=>x.anula_movimiento_id).map(x=>x.anula_movimiento_id));
   return lista.map(x=>{
-    const h=new Date(x.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const h=new Date(x.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
     const an=anulados.has(x.id);
     return `<div class="mov ${an?'anulado':''}"><div><div>${esc(nombres?.[x.alumno_id] ? nombres[x.alumno_id]+' · ' : '')}${NOMBRE_TIPO[x.tipo]}${an?' (anulada)':''}</div>
       <div class="det">${h}${x.detalle?' · '+esc(x.detalle):''}</div>
@@ -521,7 +550,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>ir(b.dataset.p)
 
 // ===================== INGRESO =====================
 async function entrar(){
-  const { data:{ user } } = await sb.auth.getUser();
+  const { data:{ session } } = await sb.auth.getSession(); const user = session?.user;
   if(!user){ $('vLogin').classList.remove('oculto'); $('vApp').classList.add('oculto'); return; }
   const { data, error } = await sb.from('operadores').select('nombre,rol,kioscos(nombre,colegio)').eq('user_id', user.id).maybeSingle();
   if(error || !data){
