@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Recreo · Kiosco sin efectivo</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<style>
+  :root{
+    --verde:#0F766E; --verde-osc:#0B5A54; --verde-claro:#E6F4F2;
+    --sol:#F5B700; --rojo:#C62828; --rojo-claro:#FDECEC;
+    --texto:#1F2933; --gris:#6B7785; --borde:#E3E8EE; --fondo:#F6F8FA; --blanco:#fff;
+    --radio:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--fondo);color:var(--texto);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px}
+  button,input,select{font:inherit}
+  .oculto{display:none!important}
+  header{position:sticky;top:0;z-index:5;background:var(--verde);color:#fff;
+    padding:12px 16px;display:flex;align-items:center;gap:10px}
+  header .marca{font-weight:800;font-size:20px;letter-spacing:.3px}
+  header .marca span{color:var(--sol)}
+  header .kiosco{font-size:13px;opacity:.85;margin-left:auto;text-align:right}
+  main{max-width:560px;margin:0 auto;padding:16px 16px 96px}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--borde);
+    display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+  nav button{border:0;background:none;padding:10px 4px 12px;color:var(--gris);font-size:13px;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;gap:4px}
+  nav button svg{width:24px;height:24px}
+  nav button.activo{color:var(--verde)}
+  .tarjeta{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);padding:16px;margin-bottom:14px}
+  h2{font-size:18px;margin:0 0 12px}
+  .lector{border:2px dashed #9CC9C4;background:var(--verde-claro);border-radius:var(--radio);
+    padding:22px 16px;text-align:center;cursor:pointer}
+  .lector .ico{width:56px;height:56px;margin:0 auto 8px;color:var(--verde)}
+  .lector.escuchando .ico{animation:pulso 1.4s infinite}
+  @keyframes pulso{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.6}}
+  .lector b{display:block;font-size:17px}
+  .lector small{color:var(--gris)}
+  .alumno{display:flex;align-items:center;gap:12px}
+  .avatar{width:48px;height:48px;border-radius:50%;background:var(--verde);color:#fff;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+  .alumno .nom{font-weight:700;font-size:18px}
+  .alumno .cur{color:var(--gris);font-size:14px}
+  .saldo{margin-left:auto;text-align:right}
+  .saldo small{display:block;color:var(--gris);font-size:12px}
+  .saldo b{font-size:22px}
+  .neg{color:var(--rojo)}
+  .monto{font-size:40px;font-weight:800;text-align:center;padding:8px 0;letter-spacing:.5px}
+  .teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .teclado button{border:1px solid var(--borde);background:#fff;border-radius:12px;padding:16px 0;font-size:22px;font-weight:600}
+  .teclado button:active{background:var(--verde-claro)}
+  .rapidos{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .rapidos button{flex:1 1 22%;border:1px solid #BFE0DC;background:var(--verde-claro);color:var(--verde-osc);
+    border-radius:999px;padding:8px 6px;font-weight:700;font-size:14px}
+  .btn{width:100%;border:0;border-radius:12px;padding:16px;font-size:18px;font-weight:700;color:#fff;background:var(--verde)}
+  .btn:disabled{background:#A7B4BF}
+  .btn.sec{background:#fff;color:var(--verde);border:1.5px solid var(--verde)}
+  .btn.peligro{background:#fff;color:var(--rojo);border:1.5px solid var(--rojo)}
+  .btn.chico{padding:10px;font-size:15px}
+  .fila{display:flex;gap:8px}
+  .fila>*{flex:1}
+  label{display:block;font-size:13px;color:var(--gris);margin:10px 0 4px;font-weight:600}
+  input,select{width:100%;padding:12px;border:1px solid var(--borde);border-radius:10px;background:#fff;font-size:16px}
+  input:focus{outline:2px solid #9CC9C4;border-color:var(--verde)}
+  .lista .item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--borde);cursor:pointer}
+  .lista .item:last-child{border-bottom:0}
+  .lista .item .sub{color:var(--gris);font-size:13px}
+  .lista .item .der{margin-left:auto;text-align:right;font-weight:700}
+  .mov{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--borde);font-size:14px}
+  .mov:last-child{border:0}
+  .mov .det{color:var(--gris);font-size:12px}
+  .mov .imp{margin-left:auto;font-weight:700;white-space:nowrap}
+  .mov.anulado .imp{text-decoration:line-through;color:var(--gris)}
+  .mas{color:#1B7F3B}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);padding:14px}
+  .kpi small{color:var(--gris);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .kpi b{display:block;font-size:24px;margin-top:4px}
+  .kpi span{color:var(--gris);font-size:13px}
+  .aviso{border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:12px}
+  .aviso.info{background:#EEF4FF;color:#23408E}
+  .aviso.error{background:var(--rojo-claro);color:var(--rojo)}
+  .resultado{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#fff;text-align:center;padding:24px}
+  .resultado.ok{background:var(--verde)} .resultado.mal{background:var(--rojo)}
+  .resultado .grande{font-size:28px;font-weight:800;margin:10px 0}
+  .resultado .sub{font-size:18px;opacity:.95}
+  .resultado svg{width:84px;height:84px}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#1F2933;color:#fff;
+    padding:12px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:90%;text-align:center}
+  .login{max-width:380px;margin:8vh auto;padding:0 16px}
+  .login .logo{text-align:center;margin-bottom:22px}
+  .login .logo b{font-size:38px;font-weight:900;color:var(--verde)}
+  .login .logo b span{color:var(--sol)}
+  .login .logo div{color:var(--gris)}
+  .manual{margin-top:10px;font-size:13px;color:var(--gris);text-align:center}
+  .manual a{color:var(--verde);font-weight:600}
+  .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--verde-claro);color:var(--verde-osc)}
+  .chip.bloq{background:var(--rojo-claro);color:var(--rojo)}
+  .modal{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:15;display:flex;align-items:flex-end;justify-content:center}
+  .modal .hoja{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px 24px;max-height:88vh;overflow:auto}
+  .modal .hoja h2{display:flex;align-items:center}
+  .modal .cerrar{margin-left:auto;border:0;background:none;font-size:26px;color:var(--gris)}
+</style>
+</head>
+<body>
+
+<!-- ============ INGRESO ============ -->
+<section id="vLogin" class="login oculto">
+  <div class="logo"><b>Recre<span>o</span></b><div>El kiosco sin efectivo</div></div>
+  <div class="tarjeta">
+    <label for="lgMail">Mail</label>
+    <input id="lgMail" type="email" autocomplete="username" inputmode="email">
+    <label for="lgPass">Contraseña</label>
+    <input id="lgPass" type="password" autocomplete="current-password">
+    <div id="lgError" class="aviso error oculto" style="margin-top:12px"></div>
+    <button class="btn" id="lgBtn" style="margin-top:16px">Ingresar</button>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="vApp" class="oculto">
+  <header>
+    <div class="marca">Recre<span>o</span></div>
+    <div class="kiosco"><div id="hdKiosco"></div><div id="hdOperador"></div></div>
+  </header>
+
+  <main>
+    <!-- COBRAR -->
+    <section id="pCobrar">
+      <div id="cbLector" class="lector"></div>
+      <div id="cbPaso2" class="oculto">
+        <div class="tarjeta"><div id="cbAlumno" class="alumno"></div></div>
+        <div class="tarjeta">
+          <div class="monto" id="cbMonto">$ 0</div>
+          <div class="rapidos" id="cbRapidos"></div>
+          <div class="teclado" id="cbTeclado"></div>
+        </div>
+        <button class="btn" id="cbBtn" disabled>Cobrar</button>
+        <button class="btn sec chico" id="cbOtro" style="margin-top:10px">Cancelar</button>
+      </div>
+    </section>
+
+    <!-- CARGAR -->
+    <section id="pCargar" class="oculto">
+      <div id="cgLector" class="lector"></div>
+      <div class="manual">¿No tiene el llavero? <a href="#" id="cgBuscar">Buscar por nombre</a></div>
+      <div id="cgPaso2" class="oculto" style="margin-top:14px">
+        <div class="tarjeta"><div id="cgAlumno" class="alumno"></div></div>
+        <div class="tarjeta">
+          <div class="monto" id="cgMonto">$ 0</div>
+          <div class="rapidos" id="cgRapidos"></div>
+          <div class="teclado" id="cgTeclado"></div>
+          <label for="cgDetalle">Detalle (opcional)</label>
+          <input id="cgDetalle" placeholder="Ej.: transferencia de la mamá">
+        </div>
+        <button class="btn" id="cgBtn" disabled>Cargar saldo</button>
+        <button class="btn sec chico" id="cgOtro" style="margin-top:10px">Cancelar</button>
+      </div>
+    </section>
+
+    <!-- ALUMNOS -->
+    <section id="pAlumnos" class="oculto">
+      <div class="fila" style="margin-bottom:12px">
+        <input id="alBuscar" placeholder="Buscar alumno o curso">
+        <button class="btn chico" id="alNuevo" style="flex:0 0 auto;width:auto;padding:10px 16px">+ Nuevo</button>
+      </div>
+      <div class="tarjeta lista" id="alLista"></div>
+    </section>
+
+    <!-- CAJA -->
+    <section id="pCaja" class="oculto">
+      <div class="fila" style="margin-bottom:12px;align-items:center">
+        <input type="date" id="cjFecha">
+      </div>
+      <div class="kpis" id="cjKpis"></div>
+      <div class="tarjeta" style="margin-top:14px"><h2>Movimientos del día</h2><div id="cjMovs"></div></div>
+      <button class="btn peligro chico" id="cjSalir">Cerrar sesión</button>
+    </section>
+  </main>
+
+  <nav>
+    <button data-p="pCobrar" class="activo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Cobrar</button>
+    <button data-p="pCargar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Cargar</button>
+    <button data-p="pAlumnos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.7 3 2.4 3.5 5.2"/></svg>Alumnos</button>
+    <button data-p="pCaja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Caja</button>
+  </nav>
+</div>
+
+<div id="capa"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ===================== CONFIGURACIÓN =====================
+const SUPABASE_URL = 'https://xropgbjtjugjxjuawwfo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_PvaK4Evh8txEz-EQoUolsQ_pd_AKyj8';
+const MONTOS_RAPIDOS_COBRO = [500, 1000, 1500, 2000];
+const MONTOS_RAPIDOS_CARGA = [5000, 10000, 20000, 30000];
+// =========================================================
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const pesos = n => '$ ' + Math.round(Number(n)||0).toLocaleString('es-AR');
+const iniciales = s => (s||'?').trim().split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const limpiarUid = s => String(s||'').replace(/[^0-9a-f]/gi,'').toUpperCase();
+const hayNFC = 'NDEFReader' in window;
+
+let yo = null;            // operador conectado
+let pagina = 'pCobrar';
+let alCobro = null, montoCobro = '';
+let alCarga = null, montoCarga = '';
+
+// ---------- mensajes ----------
+function toast(txt, ms=2600){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=txt;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), ms);
+}
+function errorTexto(e){
+  const m = (e && (e.message||e.error_description)) || 'Error inesperado';
+  if(/Failed to fetch|NetworkError/i.test(m)) return 'Sin conexión a internet. Probá de nuevo.';
+  if(/Invalid login/i.test(m)) return 'Mail o contraseña incorrectos.';
+  return m;
+}
+function vibrar(p){ try{ navigator.vibrate && navigator.vibrate(p) }catch{} }
+function resultado(ok, titulo, sub){
+  vibrar(ok?80:[120,60,120]);
+  const d=document.createElement('div'); d.className='resultado '+(ok?'ok':'mal');
+  d.innerHTML=(ok
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3L17 9"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 8l8 8M16 8l-8 8"/></svg>')
+    +`<div class="grande">${esc(titulo)}</div><div class="sub">${esc(sub||'')}</div><div class="sub" style="margin-top:28px;opacity:.75;font-size:14px">Tocá para seguir</div>`;
+  d.onclick=()=>d.remove(); document.body.appendChild(d);
+  setTimeout(()=>d.remove(), ok?2200:4000);
+}
+
+// ---------- NFC ----------
+let lectorNFC=null, nfcActivo=false, alLeer=null;
+async function activarNFC(){
+  if(!hayNFC) return false;
+  if(nfcActivo) return true;
+  try{
+    lectorNFC = new NDEFReader();
+    await lectorNFC.scan();
+    lectorNFC.onreading = ev => { const uid=limpiarUid(ev.serialNumber); if(uid && alLeer) alLeer(uid); };
+    lectorNFC.onreadingerror = () => toast('No se pudo leer el llavero. Apoyalo de nuevo, quieto.');
+    nfcActivo = true; return true;
+  }catch(e){
+    toast(e.name==='NotAllowedError' ? 'Hay que permitir el NFC para leer los llaveros.' : 'No se pudo activar el NFC. ¿Está prendido en el celular?', 4000);
+    return false;
+  }
+}
+const ICO_NFC='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8.5a6 6 0 000 7M9 6a9.5 9.5 0 000 12"/><rect x="12" y="5" width="9" height="14" rx="2"/><circle cx="16.5" cy="15.5" r="1"/></svg>';
+function pintarLector(el, texto, onUid){
+  const escuchando = nfcActivo;
+  el.className='lector'+(escuchando?' escuchando':'');
+  el.innerHTML = ICO_NFC + (hayNFC
+    ? `<b>${escuchando?texto:'Tocá acá para activar el lector'}</b><small>${escuchando?'Apoyá el llavero en la parte de atrás del celular':'Solo la primera vez'}</small>`
+    : `<b>Este equipo no lee llaveros</b><small>Usá Chrome en un celular Android con NFC</small>`)
+    + `<div class="manual"><a href="#" data-manual>Ingresar código a mano</a></div>`;
+  el.onclick = async ev => {
+    if(ev.target.closest('[data-manual]')){ ev.preventDefault();
+      const c = prompt('Código del llavero:'); if(c && limpiarUid(c)) onUid(limpiarUid(c)); return; }
+    if(hayNFC && !nfcActivo){ if(await activarNFC()) pintarLector(el, texto, onUid); }
+  };
+}
+
+// ---------- teclado ----------
+function armarTeclado(cont, rapidos, getM, setM, rapCont){
+  cont.innerHTML='';
+  ['1','2','3','4','5','6','7','8','9','00','0','⌫'].forEach(k=>{
+    const b=document.createElement('button'); b.textContent=k;
+    b.onclick=()=>{ let m=getM(); if(k==='⌫') m=m.slice(0,-1); else if(m.length<7) m=(m+k).replace(/^0+/,''); setM(m); };
+    cont.appendChild(b);
+  });
+  rapCont.innerHTML='';
+  rapidos.forEach(v=>{ const b=document.createElement('button'); b.textContent=pesos(v); b.onclick=()=>setM(String(v)); rapCont.appendChild(b); });
+}
+function htmlAlumno(a, saldo){
+  return `<div class="avatar">${esc(iniciales(a.nombre))}</div>
+  <div><div class="nom">${esc(a.nombre)}</div><div class="cur">${esc(a.curso||'Sin curso')}</div></div>
+  <div class="saldo"><small>Saldo</small><b class="${saldo<0?'neg':''}">${pesos(saldo)}</b></div>`;
+}
+
+// ---------- buscar llavero ----------
+async function datosLlavero(uid){
+  const { data, error } = await sb.rpc('buscar_llavero', { p_uid: uid });
+  if(error) throw error;
+  return data && data[0];
+}
+
+// ===================== COBRAR =====================
+function cobroReset(){
+  alCobro=null; montoCobro='';
+  $('cbPaso2').classList.add('oculto'); $('cbLector').classList.remove('oculto');
+  pintarLector($('cbLector'), 'Listo para cobrar', uidCobro);
+}
+function setMontoCobro(m){ montoCobro=m; $('cbMonto').textContent=pesos(m||0);
+  const n=Number(m||0); $('cbBtn').disabled=!n; $('cbBtn').textContent=n?`Cobrar ${pesos(n)}`:'Cobrar'; }
+async function uidCobro(uid){
+  if(pagina!=='pCobrar') return;
+  try{
+    const l = await datosLlavero(uid);
+    if(!l) return resultado(false,'Llavero no registrado','Dalo de alta en Alumnos');
+    if(l.estado!=='activo') return resultado(false,'Llavero bloqueado', l.nombre?`Era de ${l.nombre}`:'');
+    if(!l.alumno_id) return resultado(false,'Llavero sin alumno','Asignalo en Alumnos');
+    alCobro={ uid, id:l.alumno_id, nombre:l.nombre, curso:l.curso, saldo:Number(l.saldo) };
+    $('cbAlumno').innerHTML = htmlAlumno(alCobro, alCobro.saldo);
+    $('cbLector').classList.add('oculto'); $('cbPaso2').classList.remove('oculto');
+    setMontoCobro(''); vibrar(40);
+  }catch(e){ resultado(false,'No se pudo leer', errorTexto(e)); }
+}
+$('cbBtn').onclick = async ()=>{
+  const n=Number(montoCobro||0); if(!alCobro||!n) return;
+  $('cbBtn').disabled=true;
+  const { data, error } = await sb.rpc('cobrar', { p_uid: alCobro.uid, p_monto: n });
+  if(error){ resultado(false, /insuficiente/i.test(error.message)?'Saldo insuficiente':'No se pudo cobrar', errorTexto(error)); $('cbBtn').disabled=false; return; }
+  resultado(true, `Cobrado ${pesos(n)}`, `${alCobro.nombre} · le quedan ${pesos(data[0].r_saldo)}`);
+  cobroReset();
+};
+$('cbOtro').onclick = cobroReset;
+
+// ===================== CARGAR =====================
+function cargaReset(){
+  alCarga=null; montoCarga=''; $('cgDetalle').value='';
+  $('cgPaso2').classList.add('oculto'); $('cgLector').classList.remove('oculto');
+  pintarLector($('cgLector'), 'Apoyá el llavero para cargar', uidCarga);
+}
+function setMontoCarga(m){ montoCarga=m; $('cgMonto').textContent=pesos(m||0);
+  const n=Number(m||0); $('cgBtn').disabled=!n; $('cgBtn').textContent=n?`Cargar ${pesos(n)}`:'Cargar saldo'; }
+function mostrarCarga(a){
+  alCarga=a; $('cgAlumno').innerHTML=htmlAlumno(a, a.saldo);
+  $('cgLector').classList.add('oculto'); $('cgPaso2').classList.remove('oculto'); setMontoCarga('');
+}
+async function uidCarga(uid){
+  if(pagina!=='pCargar') return;
+  try{
+    const l = await datosLlavero(uid);
+    if(!l || !l.alumno_id) return resultado(false,'Llavero no registrado','Dalo de alta en Alumnos');
+    mostrarCarga({ id:l.alumno_id, nombre:l.nombre, curso:l.curso, saldo:Number(l.saldo) });
+    vibrar(40);
+  }catch(e){ resultado(false,'No se pudo leer', errorTexto(e)); }
+}
+$('cgBtn').onclick = async ()=>{
+  const n=Number(montoCarga||0); if(!alCarga||!n) return;
+  $('cgBtn').disabled=true;
+  const { data, error } = await sb.rpc('cargar_saldo', { p_alumno: alCarga.id, p_monto: n, p_detalle: $('cgDetalle').value.trim()||null });
+  if(error){ resultado(false,'No se pudo cargar', errorTexto(error)); $('cgBtn').disabled=false; return; }
+  resultado(true, `Cargado ${pesos(n)}`, `${alCarga.nombre} · saldo ${pesos(data)}`);
+  cargaReset();
+};
+$('cgOtro').onclick = cargaReset;
+$('cgBuscar').onclick = e => { e.preventDefault(); elegirAlumno(a => mostrarCarga(a)); };
+
+// ===================== ALUMNOS =====================
+let cacheAlumnos=[];
+async function cargarAlumnos(){
+  const { data, error } = await sb.from('alumnos').select('id,nombre,curso,saldo,activo,llaveros(uid,estado)').eq('activo',true).order('nombre');
+  if(error){ toast(errorTexto(error)); return []; }
+  cacheAlumnos = data; return data;
+}
+function filtrar(lista, q){
+  q=q.trim().toLowerCase(); if(!q) return lista;
+  return lista.filter(a=>(a.nombre+' '+(a.curso||'')).toLowerCase().includes(q));
+}
+function pintarLista(){
+  const l = filtrar(cacheAlumnos, $('alBuscar').value);
+  $('alLista').innerHTML = l.length ? l.map(a=>{
+    const tiene = (a.llaveros||[]).some(x=>x.estado==='activo');
+    return `<div class="item" data-id="${a.id}"><div class="avatar" style="width:40px;height:40px;font-size:15px">${esc(iniciales(a.nombre))}</div>
+      <div><div>${esc(a.nombre)}</div><div class="sub">${esc(a.curso||'Sin curso')} ${tiene?'':'· <span class="chip bloq">sin llavero</span>'}</div></div>
+      <div class="der ${a.saldo<0?'neg':''}">${pesos(a.saldo)}</div></div>`;
+  }).join('') : `<div class="sub" style="padding:10px 2px;color:var(--gris)">${cacheAlumnos.length?'No hay coincidencias.':'Todavía no hay alumnos. Tocá «+ Nuevo».'}</div>`;
+  $('alLista').querySelectorAll('.item').forEach(it=>it.onclick=()=>fichaAlumno(it.dataset.id));
+}
+$('alBuscar').oninput = pintarLista;
+
+function abrirHoja(titulo, html){
+  const m=document.createElement('div'); m.className='modal';
+  m.innerHTML=`<div class="hoja"><h2>${esc(titulo)}<button class="cerrar" aria-label="Cerrar">×</button></h2>${html}</div>`;
+  m.querySelector('.cerrar').onclick=()=>cerrarHoja(m);
+  m.onclick=e=>{ if(e.target===m) cerrarHoja(m); };
+  $('capa').appendChild(m); return m;
+}
+function cerrarHoja(m){ m.remove(); alLeer = lectorDePagina(); }
+
+// Alta de alumno
+$('alNuevo').onclick = ()=>{
+  let uidNuevo=null;
+  const m = abrirHoja('Nuevo alumno', `
+    <label>Nombre y apellido</label><input id="nvNom" autocomplete="off">
+    <label>Curso</label><input id="nvCur" placeholder="Ej.: 3° B" autocomplete="off">
+    <label>Llavero</label><div id="nvLec" class="lector" style="padding:14px"></div>
+    <div id="nvErr" class="aviso error oculto" style="margin-top:12px"></div>
+    <button class="btn" id="nvBtn" style="margin-top:14px">Guardar alumno</button>`);
+  const setUid = uid => { uidNuevo=uid; vibrar(40);
+    m.querySelector('#nvLec').className='lector';
+    m.querySelector('#nvLec').innerHTML=`${ICO_NFC}<b>Llavero leído ✓</b><small>Código ${esc(uid)}</small>`; };
+  pintarLector(m.querySelector('#nvLec'), 'Apoyá el llavero nuevo', setUid);
+  alLeer = setUid;
+  m.querySelector('#nvBtn').onclick = async ()=>{
+    const nom=m.querySelector('#nvNom').value.trim(), cur=m.querySelector('#nvCur').value.trim();
+    const err=m.querySelector('#nvErr');
+    if(!nom){ err.textContent='Falta el nombre.'; err.classList.remove('oculto'); return; }
+    m.querySelector('#nvBtn').disabled=true;
+    const { error } = await sb.rpc('alta_alumno', { p_nombre:nom, p_curso:cur||null, p_uid:uidNuevo });
+    if(error){ err.textContent=errorTexto(error); err.classList.remove('oculto'); m.querySelector('#nvBtn').disabled=false; return; }
+    cerrarHoja(m); toast(`${nom} quedó dado de alta${uidNuevo?' con su llavero':''}.`);
+    await cargarAlumnos(); pintarLista();
+  };
+};
+
+// Elegir alumno por nombre (para cargar sin llavero)
+async function elegirAlumno(cb){
+  if(!cacheAlumnos.length) await cargarAlumnos();
+  const m = abrirHoja('Elegir alumno', `<input id="elQ" placeholder="Buscar por nombre o curso" autocomplete="off"><div class="lista" id="elL" style="margin-top:8px"></div>`);
+  const pintar=()=>{ const l=filtrar(cacheAlumnos, m.querySelector('#elQ').value).slice(0,40);
+    m.querySelector('#elL').innerHTML=l.map(a=>`<div class="item" data-id="${a.id}"><div>${esc(a.nombre)}<div class="sub">${esc(a.curso||'')}</div></div><div class="der">${pesos(a.saldo)}</div></div>`).join('');
+    m.querySelector('#elL').querySelectorAll('.item').forEach(it=>it.onclick=()=>{ const a=cacheAlumnos.find(x=>x.id===it.dataset.id); cerrarHoja(m); cb({...a, saldo:Number(a.saldo)}); }); };
+  m.querySelector('#elQ').oninput=pintar; pintar(); m.querySelector('#elQ').focus();
+}
+
+// Ficha del alumno
+async function fichaAlumno(id){
+  const a = cacheAlumnos.find(x=>x.id===id); if(!a) return;
+  const m = abrirHoja(a.nombre, `<div class="alumno" style="margin-bottom:10px">${htmlAlumno(a, a.saldo)}</div>
+    <div id="fhLlav"></div>
+    <div class="fila" style="margin:12px 0"><button class="btn sec chico" id="fhCambiar">Cambiar llavero</button><button class="btn peligro chico" id="fhBloq">Bloquear llavero</button></div>
+    <h2 style="margin-top:6px">Últimos movimientos</h2><div id="fhMovs">Cargando…</div>`);
+  const activo = (a.llaveros||[]).find(x=>x.estado==='activo');
+  m.querySelector('#fhLlav').innerHTML = activo
+    ? `<span class="chip">Llavero activo · ${esc(activo.uid)}</span>`
+    : `<span class="chip bloq">Sin llavero activo</span>`;
+  m.querySelector('#fhBloq').disabled = !activo;
+  m.querySelector('#fhBloq').onclick = async ()=>{
+    if(!confirm(`¿Bloquear el llavero de ${a.nombre}? El saldo no se pierde: queda en el alumno para pasarlo a un llavero nuevo.`)) return;
+    const { error } = await sb.rpc('bloquear_llavero', { p_uid: activo.uid });
+    if(error) return toast(errorTexto(error));
+    toast('Llavero bloqueado.'); cerrarHoja(m); await cargarAlumnos(); pintarLista();
+  };
+  m.querySelector('#fhCambiar').onclick = ()=>{
+    const z = m.querySelector('#fhLlav');
+    z.innerHTML='<div class="lector" style="padding:14px"></div>';
+    const vincular = async uid => {
+      const { error } = await sb.rpc('vincular_llavero', { p_alumno: a.id, p_uid: uid });
+      if(error) return resultado(false,'No se pudo asignar', errorTexto(error));
+      resultado(true,'Llavero asignado', a.nombre + (activo?' · el anterior quedó bloqueado':''));
+      cerrarHoja(m); await cargarAlumnos(); pintarLista();
+    };
+    pintarLector(z.firstChild, 'Apoyá el llavero nuevo', vincular); alLeer = vincular;
+  };
+  const { data, error } = await sb.from('movimientos').select('id,tipo,monto,saldo_resultante,detalle,creado_en,anula_movimiento_id').eq('alumno_id', id).order('creado_en',{ascending:false}).limit(30);
+  m.querySelector('#fhMovs').innerHTML = error ? errorTexto(error) : htmlMovs(data, true);
+  enganchar(m.querySelector('#fhMovs'), async()=>{ cerrarHoja(m); await cargarAlumnos(); pintarLista(); });
+}
+
+// ---------- movimientos ----------
+const NOMBRE_TIPO={carga:'Carga de saldo',compra:'Compra',anulacion:'Anulación',ajuste:'Ajuste'};
+function htmlMovs(lista, conAnular, nombres){
+  if(!lista.length) return '<div style="color:var(--gris);font-size:14px">Sin movimientos.</div>';
+  const anulados = new Set(lista.filter(x=>x.anula_movimiento_id).map(x=>x.anula_movimiento_id));
+  return lista.map(x=>{
+    const h=new Date(x.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const an=anulados.has(x.id);
+    return `<div class="mov ${an?'anulado':''}"><div><div>${esc(nombres?.[x.alumno_id] ? nombres[x.alumno_id]+' · ' : '')}${NOMBRE_TIPO[x.tipo]}${an?' (anulada)':''}</div>
+      <div class="det">${h}${x.detalle?' · '+esc(x.detalle):''}</div>
+      ${conAnular && !an && x.tipo!=='anulacion' ? `<a href="#" class="det" data-anular="${x.id}" style="color:var(--rojo)">Anular</a>`:''}</div>
+      <div class="imp ${x.monto>0?'mas':''}">${x.monto>0?'+':'−'} ${pesos(Math.abs(x.monto))}</div></div>`;
+  }).join('');
+}
+function enganchar(cont, despues){
+  cont.querySelectorAll('[data-anular]').forEach(a=>a.onclick=async e=>{
+    e.preventDefault();
+    if(!confirm('¿Anular este movimiento? Se devuelve el saldo y queda registrado.')) return;
+    const { error } = await sb.rpc('anular_movimiento', { p_mov: Number(a.dataset.anular) });
+    if(error) return toast(errorTexto(error));
+    toast('Movimiento anulado.'); despues && despues();
+  });
+}
+
+// ===================== CAJA =====================
+function hoyAR(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'}); }
+async function cargarCaja(){
+  const f = $('cjFecha').value || hoyAR();
+  const [r, mv] = await Promise.all([
+    sb.rpc('caja_del_dia', { p_fecha: f }),
+    sb.from('movimientos').select('id,alumno_id,tipo,monto,detalle,creado_en,anula_movimiento_id')
+      .gte('creado_en', f+'T00:00:00-03:00').lt('creado_en', f+'T23:59:59.999-03:00').order('creado_en',{ascending:false}).limit(300)
+  ]);
+  if(r.error) return toast(errorTexto(r.error));
+  const c = r.data[0];
+  $('cjKpis').innerHTML = `
+    <div class="kpi"><small>Vendido</small><b>${pesos(c.ventas)}</b><span>${c.cantidad_ventas} ventas</span></div>
+    <div class="kpi"><small>Cargado</small><b>${pesos(c.cargas)}</b><span>${c.cantidad_cargas} cargas</span></div>`;
+  const nombres = Object.fromEntries(cacheAlumnos.map(a=>[a.id,a.nombre]));
+  $('cjMovs').innerHTML = mv.error ? errorTexto(mv.error) : htmlMovs(mv.data, true, nombres);
+  enganchar($('cjMovs'), async()=>{ await cargarAlumnos(); cargarCaja(); });
+}
+$('cjFecha').onchange = cargarCaja;
+$('cjSalir').onclick = async ()=>{ if(confirm('¿Cerrar sesión en este equipo?')){ await sb.auth.signOut(); location.reload(); } };
+
+// ===================== NAVEGACIÓN =====================
+function lectorDePagina(){ return {pCobrar:uidCobro, pCargar:uidCarga}[pagina] || null; }
+async function ir(p){
+  pagina=p;
+  document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('oculto', s.id!==p));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('activo', b.dataset.p===p));
+  alLeer = lectorDePagina();
+  if(p==='pCobrar') cobroReset();
+  if(p==='pCargar') cargaReset();
+  if(p==='pAlumnos'){ await cargarAlumnos(); pintarLista(); }
+  if(p==='pCaja'){ if(!$('cjFecha').value) $('cjFecha').value=hoyAR(); if(!cacheAlumnos.length) await cargarAlumnos(); cargarCaja(); }
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>ir(b.dataset.p));
+
+// ===================== INGRESO =====================
+async function entrar(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user){ $('vLogin').classList.remove('oculto'); $('vApp').classList.add('oculto'); return; }
+  const { data, error } = await sb.from('operadores').select('nombre,rol,kioscos(nombre,colegio)').eq('user_id', user.id).maybeSingle();
+  if(error || !data){
+    $('vLogin').classList.remove('oculto');
+    $('lgError').textContent = 'Este usuario todavía no está asignado a un kiosco.'; $('lgError').classList.remove('oculto');
+    await sb.auth.signOut(); return;
+  }
+  yo = data;
+  $('hdKiosco').textContent = data.kioscos?.nombre || '';
+  $('hdOperador').textContent = data.nombre;
+  $('vLogin').classList.add('oculto'); $('vApp').classList.remove('oculto');
+  armarTeclado($('cbTeclado'), MONTOS_RAPIDOS_COBRO, ()=>montoCobro, setMontoCobro, $('cbRapidos'));
+  armarTeclado($('cgTeclado'), MONTOS_RAPIDOS_CARGA, ()=>montoCarga, setMontoCarga, $('cgRapidos'));
+  // si el permiso de NFC ya fue dado antes, se activa solo
+  try{ if(hayNFC && navigator.permissions){ const p=await navigator.permissions.query({name:'nfc'}); if(p.state==='granted') await activarNFC(); } }catch{}
+  ir('pCobrar');
+}
+$('lgBtn').onclick = async ()=>{
+  $('lgError').classList.add('oculto'); $('lgBtn').disabled=true;
+  const { error } = await sb.auth.signInWithPassword({ email:$('lgMail').value.trim(), password:$('lgPass').value });
+  $('lgBtn').disabled=false;
+  if(error){ $('lgError').textContent=errorTexto(error); $('lgError').classList.remove('oculto'); return; }
+  entrar();
+};
+$('lgPass').onkeydown = e => { if(e.key==='Enter') $('lgBtn').click(); };
+entrar();
+</script>
+</body>
+</html>
